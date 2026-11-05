@@ -40,6 +40,10 @@ jobs:
       - name: Скачиваем проверенный код
         uses: actions/checkout@v4
 
+      - name: Добавляем штамп времени и номер сборки на сайт
+        run: |
+          echo "<hr><p>Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
+
       - name: Упаковываем сайт для сервера
         uses: actions/upload-pages-artifact@v3
         with:
@@ -49,6 +53,4 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Добавляем штамп времени и номер сборки на сайт
-        run: |
-          echo "<hr><p>Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
+     
