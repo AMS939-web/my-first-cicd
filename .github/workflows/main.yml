@@ -1,0 +1,50 @@
+name: My First CI/CD Pipeline
+
+# 1. ТРИГГЕР: Запускать робота при каждом изменении в ветке main
+on:
+  push:
+    branches: [ main ]
+
+# Выдаем роботу права на публикацию сайта
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 2. ЗАДАЧИ ДЛЯ РОБОТА (Jobs)
+jobs:
+  # --- ЭТАП 1: CI (Проверка кода) ---
+  test-code:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Скачиваем код из репозитория
+        uses: actions/checkout@v4
+
+      - name: Проверяем, что index.html не пустой
+        run: |
+          if [ -s index.html ]; then
+            echo "Ура! Тест пройден, файл index.html в порядке."
+          else
+            echo "ОШИБКА! Файл index.html пустой или удален!"
+            exit 1
+          fi
+
+  # --- ЭТАП 2: CD (Публикация сайта) ---
+  deploy-site:
+    needs: test-code # Запустится ТОЛЬКО если этап test-code прошел успешно!
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Скачиваем проверенный код
+        uses: actions/checkout@v4
+
+      - name: Упаковываем сайт для сервера
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Выкладываем сайт в интернет
+        id: deployment
+        uses: actions/deploy-pages@v4
