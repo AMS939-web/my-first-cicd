@@ -20,12 +20,12 @@ jobs:
       - name: Скачиваем код из репозитория
         uses: actions/checkout@v4
 
-      - name: Проверяем, что index.html не пустой
+      - name: Проверяем, что на странице есть заголовок h1
         run: |
-          if [ -s index.html ]; then
-            echo "Ура! Тест пройден, файл index.html в порядке."
+          if grep -q "<h1>" index.html; then
+            echo "Ура! Тест пройден, заголовок найден."
           else
-            echo "ОШИБКА! Файл index.html пустой или удален!"
+            echo "ОШИБКА! В файле index.html нет заголовка <h1>!"
             exit 1
           fi
 
