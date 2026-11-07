@@ -1,11 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Мой CI/CD проект</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevOps & Proxmox Lab — Боевой стенд</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 20px;
+            border: 1px solid #334155;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            margin-bottom: 40px;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 42px;
+            margin-bottom: 16px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 18px;
+            color: #94a3b8;
+            max-width: 650px;
+            margin: 0 auto 30px auto;
+        }
+        .btn {
+            display: inline-block;
+            background: #3b82f6;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: #1e293b;
+            padding: 28px;
+            border-radius: 16px;
+            border: 1px solid #334155;
+        }
+        .card h3 {
+            color: #38bdf8;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+        .card p {
+            color: #cbd5e1;
+            font-size: 15px;
+        }
+        /* Стили для автоматического штампа сборки от нашего робота */
+        hr {
+            border: 0;
+            height: 1px;
+            background: #334155;
+            margin: 30px auto 15px auto;
+            max-width: 1000px;
+        }
+        body > p {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            font-family: monospace;
+            padding-bottom: 30px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Привет! Этот сайт обновлен автоматически через CI/CD.</h1>
-     <h1>Привет! Этот сайт обновлен автоматически через CI/C-2.</h1>
+
+    <div class="container">
+        <header>
+            <div class="badge">● Система работает в штатном режиме (Proxmox VE 9.2)</div>
+            <h1>Боевой CI/CD Конвейер</h1>
+            <p class="subtitle">
+                Этот лендинг проверен автоматическими тестами на собственном сервере <b>ci-runner</b> 
+                и мгновенно доставлен по защищенному протоколу SSH на веб-сервер <b>prod-server (Nginx)</b>.
+            </p>
+            <a href="#arch" class="btn">Архитектура стенда</a>
+        </header>
+
+        <div id="arch" class="grid">
+            <div class="card">
+                <h3>1. GitHub & Триггер</h3>
+                <p>Хранилище исходного кода отслеживает каждый коммит в ветку <b>main</b> и мгновенно будит домашнего сборочного робота.</p>
+            </div>
+            <div class="card">
+                <h3>2. CI-Runner (CT 100)</h3>
+                <p>Изолированный LXC-контейнер на Ubuntu 24.04 проверяет целостность верстки, ставит штамп релиза и блокирует ошибки.</p>
+            </div>
+            <div class="card">
+                <h3>3. Prod-Server (CT 101)</h3>
+                <p>Боевой веб-сервер под управлением <b>Nginx</b> принимает сборку по ключу Ed25519 и отдает сайт на скорости локальной сети.</p>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
