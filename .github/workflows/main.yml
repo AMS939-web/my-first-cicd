@@ -1,21 +1,15 @@
-name: My First CI/CD Pipeline
+name: Production CI/CD (Proxmox)
 
 # 1. ТРИГГЕР: Запускать робота при каждом изменении в ветке main
 on:
   push:
     branches: [ main ]
 
-# Выдаем роботу права на публикацию сайта
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# 2. ЗАДАЧИ ДЛЯ РОБОТА (Jobs)
+# 2. ЗАДАЧИ ДЛЯ НАШЕГО ДОМАШНЕГО РОБОТА (ci-runner)
 jobs:
-  # --- ЭТАП 1: CI (Проверка кода) ---
+  # --- ЭТАП 1: CI (Проверка кода на ci-runner) ---
   test-code:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Скачиваем код из репозитория
         uses: actions/checkout@v4
@@ -23,34 +17,25 @@ jobs:
       - name: Проверяем, что на странице есть заголовок h1
         run: |
           if grep -q "<h1>" index.html; then
-            echo "Ура! Тест пройден, заголовок найден."
+            echo "Ура! Тест пройден на сервере Proxmox (ci-runner)."
           else
             echo "ОШИБКА! В файле index.html нет заголовка <h1>!"
             exit 1
           fi
 
-  # --- ЭТАП 2: CD (Публикация сайта) ---
+  # --- ЭТАП 2: CD (Доставка по SSH на боевой сервер prod-server) ---
   deploy-site:
-    needs: test-code # Запустится ТОЛЬКО если этап test-code прошел успешно!
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    needs: test-code
+    runs-on: self-hosted
     steps:
       - name: Скачиваем проверенный код
         uses: actions/checkout@v4
 
-      - name: Добавляем штамп времени и номер сборки на сайт
+      - name: Добавляем штамп сборки и имя сервера
         run: |
-          echo "<hr><p>Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
+          echo "<hr><p>Боевой сервер Proxmox (Nginx) | Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
 
-      - name: Упаковываем сайт для сервера
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-      - name: Выкладываем сайт в интернет
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-     
+      - name: Отправляем сайт по SSH на prod-server (192.168.10.192)
+        run: |
+          scp -o StrictHostKeyChecking=accept-new index.html root@192.168.10.192:/var/www/html/index.html
+          echo "Сайт успешно доставлен на боевой сервер 192.168.10.192!"
