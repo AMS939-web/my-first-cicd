@@ -27,8 +27,10 @@ jobs:
       - name: Скачиваем проверенный код
         uses: actions/checkout@v4
 
-      - name: Добавляем штамп Docker-сборки
+      - name: Забираем данные из PostgreSQL Replica (порт 5433) и штампуем сборку
         run: |
+          DB_ROWS=$(PGPASSWORD=secretpass psql -h ${{ secrets.DB_HOST }} -p 5433 -U postgres -t -A -F " — " -c "SELECT name, role FROM devops_team;" | sed 's/^/<li>/;s/$/<\/li>/' | tr -d '\n')
+          echo "<div style='max-width:600px;margin:20px auto;padding:15px;background:#1e293b;border-radius:8px;color:#e2e8f0;font-family:sans-serif;'><h3>🗄️ Данные из СУБД PostgreSQL (Read-Only Replica :5433):</h3><ul>$DB_ROWS</ul></div>" >> index.html
           echo "<hr><p>Docker Container (nginx:alpine) | Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
 
       - name: Доставляем файлы и перезапускаем Docker-контейнер на prod-server
