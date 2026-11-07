@@ -1,41 +1,40 @@
-name: Production CI/CD (Proxmox)
+name: Production Docker CI/CD (Proxmox)
 
-# 1. ТРИГГЕР: Запускать робота при каждом изменении в ветке main
 on:
   push:
     branches: [ main ]
 
-# 2. ЗАДАЧИ ДЛЯ НАШЕГО ДОМАШНЕГО РОБОТА (ci-runner)
 jobs:
-  # --- ЭТАП 1: CI (Проверка кода на ci-runner) ---
+  # --- ЭТАП 1: CI (Проверка кода и наличия Dockerfile) ---
   test-code:
     runs-on: self-hosted
     steps:
       - name: Скачиваем код из репозитория
         uses: actions/checkout@v4
 
-      - name: Проверяем, что на странице есть заголовок h1
+      - name: Проверяем заголовок h1 и наличие Dockerfile
         run: |
-          if grep -q "<h1>" index.html; then
-            echo "Ура! Тест пройден на сервере Proxmox (ci-runner)."
+          if grep -q "<h1>" index.html && [ -f Dockerfile ]; then
+            echo "Ура! Тест пройден: верстка и Dockerfile на месте."
           else
-            echo "ОШИБКА! В файле index.html нет заголовка <h1>!"
+            echo "ОШИБКА! Нет заголовка <h1> или отсутствует Dockerfile!"
             exit 1
           fi
 
-  # --- ЭТАП 2: CD (Доставка по SSH на боевой сервер prod-server) ---
-  deploy-site:
+  # --- ЭТАП 2: CD (Упаковка и запуск в Docker на prod-server) ---
+  deploy-docker:
     needs: test-code
     runs-on: self-hosted
     steps:
       - name: Скачиваем проверенный код
         uses: actions/checkout@v4
 
-      - name: Добавляем штамп сборки и имя сервера
+      - name: Добавляем штамп Docker-сборки
         run: |
-          echo "<hr><p>Боевой сервер Proxmox (Nginx) | Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
+          echo "<hr><p>Docker Container (nginx:alpine) | Сборка № ${{ github.run_number }} | Обновлено: $(date)</p>" >> index.html
 
-      - name: Отправляем сайт по SSH на prod-server (192.168.10.192)
+      - name: Доставляем файлы и перезапускаем Docker-контейнер на prod-server
         run: |
-          scp -o StrictHostKeyChecking=accept-new index.html root@192.168.10.192:/var/www/html/index.html
-          echo "Сайт успешно доставлен на боевой сервер 192.168.10.192!"
+          ssh -o StrictHostKeyChecking=accept-new root@192.168.10.192 "mkdir -p /opt/app"
+          scp -o StrictHostKeyChecking=accept-new index.html Dockerfile root@192.168.10.192:/opt/app/
+          ssh -o StrictHostKeyChecking=accept-new root@192.168.10.192 "cd /opt/app && docker build -t my-landing-image . && docker rm -f my-landing 2>/dev/null || true && docker run -d --name my-landing --restart always -p 80:80 my-landing-image"
